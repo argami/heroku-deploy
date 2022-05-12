@@ -100,8 +100,8 @@ const deploy = ({
     if (appdir === "") {
       if (!followbuild) {
         console.log("no followbuild");
-        const proc = child.exec(`git push heroku ${branch}:refs/heads/main ${force}`, {
-          maxBuffer: 104857600,
+        const proc = child.exec(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force}`, {
+          shell: '/bin/bash',
         })
 
         proc.stdout.pipe(process.stdout);
@@ -114,16 +114,16 @@ const deploy = ({
 
       } else {
         console.log("followbuild");
-        execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
-          maxBuffer: 104857600,
+        execSync(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force}`, {
+          maxBuffer: 104857600, shell: '/bin/bash',
         });
       }
     } else {
 
       if (!followbuild) {
         console.log("no followbuild");
-        const proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`, {
-          maxBuffer: 104857600,
+        const proc = child.exec(`stdbuf -i0 -o0 -e0 git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`, {
+          shell: '/bin/bash',
         });
 
         proc.stdout.pipe(process.stdout);
@@ -137,7 +137,7 @@ const deploy = ({
       } else {
         console.log("followbuild");
         execSync(
-          `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
+          `stdbuf -i0 -o0 -e0 git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
           { maxBuffer: 104857600 }
         );
       }
