@@ -66,6 +66,7 @@ const createProcfile = ({ procfile, appdir }) => {
 };
 
 let proc = null;
+let mytail = null;
 
 const deploy = ({
   dontuseforce,
@@ -105,19 +106,31 @@ const deploy = ({
         // execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
         //   maxBuffer: 104857600, shell: '/bin/bash', timeout: 30000
         // });
-        proc = child.exec(`git push heroku ${branch}:refs/heads/main ${force} > gitoutput.log`, {
+        proc = child.exec(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force} > gitoutput.log`, {
           shell: '/bin/bash', maxBuffer: 104857600,
         })
 
-        const mytail = new Tail("gitoutput.log", line => {
-          core.info(line);
-          if (line.match(/Building source/)) {
-            core.info('killing process');
-            proc.kill();
-            core.info('stopping tail');
-            mytail.stop();
+        let data = "";
+
+        while (!data.match(/Building source/)) {
+          try {
+            let data = fs.readFileSync('gitoutput.log', 'utf8');
+            data = data.toString();
+            console.log(data);
+          } catch (err) {
+            console.error(err);
           }
-        });
+        }
+
+        // mytail = new Tail("gitoutput.log", line => {
+        //   core.info(line);
+        //   if (line.match(/Building source/)) {
+        //     core.info('killing process');
+        //     proc.kill();
+        //     core.info('stopping tail');
+        //     mytail.stop();
+        //   }
+        // });
 
         // core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
 
@@ -162,17 +175,29 @@ const deploy = ({
         // );
         proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main > gitoutput.log`, {
           shell: '/bin/bash', maxBuffer: 104857600,
-        })
-
-        const mytail = new Tail("gitoutput.log", line => {
-          core.info(line);
-          if (line.match(/Building source/)) {
-            core.info('killing process');
-            proc.kill();
-            core.info('stopping tail');
-            mytail.stop();
-          }
         });
+
+        let data = "";
+
+        while (!data.match(/Building source/)) {
+          try {
+            let data = fs.readFileSync('gitoutput.log', 'utf8');
+            data = data.toString();
+            console.log(data);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+
+        // const mytail = new Tail("gitoutput.log", line => {
+        //   core.info(line);
+        //   if (line.match(/Building source/)) {
+        //     core.info('killing process');
+        //     proc.kill();
+        //     core.info('stopping tail');
+        //     mytail.stop();
+        //   }
+        // });
 
         // core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
 
