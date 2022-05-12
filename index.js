@@ -100,7 +100,9 @@ const deploy = ({
     if (appdir === "") {
       if (!followbuild) {
         console.log("Created and wrote to ~/.netrc");
-        const proc = child.exec(`git push heroku ${branch}:refs/heads/main ${force}`)
+        const proc = child.exec(`git push heroku ${branch}:refs/heads/main ${force}`, {
+          maxBuffer: 104857600,
+        })
 
         // proc.stdout.pipe(process.stdout);
         proc.stdout.on('data', (data) => {
@@ -119,7 +121,9 @@ const deploy = ({
 
       if (!followbuild) {
         console.log("Created and wrote to ~/.netrc");
-        const proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`);
+        const proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`, {
+          maxBuffer: 104857600,
+        });
 
         // proc.stdout.pipe(process.stdout);
         proc.stdout.on('data', (data) => {
