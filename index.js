@@ -75,7 +75,6 @@ const deploy = ({
   followbuild = false,
 }) => {
   const force = !dontuseforce ? "--force" : "";
-  console.log(heroku);
   if (usedocker) {
     execSync(
       `heroku container:push ${dockerHerokuProcessType} --app ${app_name} ${dockerBuildArgs}`,
@@ -99,18 +98,26 @@ const deploy = ({
 
     if (appdir === "") {
       if (!followbuild) {
-        console.log("no followbuild");
+        core.debug("no followbuild 1");
         const proc = child.exec(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force}`, {
-          shell: '/bin/bash',
+          shell: '/bin/bash', maxBuffer: 104857600,
         })
 
+        core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
+
+        core.debug(`stdout: ${proc.stdout}`);
         proc.stdout.pipe(process.stdout);
+        core.debug(`on: data`);
         proc.stdout.on('data', (data) => {
-          console.log(data);
-          if (data.match(/remote:/)) {
+          core.info(data.toString());
+          if (data.toString().match(/Building source/)) {
             proc.kill();
           }
         });
+
+        while (!proc.killed) {
+          sleep(100);
+        }
 
       } else {
         console.log("followbuild");
@@ -121,18 +128,27 @@ const deploy = ({
     } else {
 
       if (!followbuild) {
-        console.log("no followbuild");
+        core.debug("no followbuild 2");
         const proc = child.exec(`stdbuf -i0 -o0 -e0 git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`, {
-          shell: '/bin/bash',
-        });
+          shell: '/bin/bash', maxBuffer: 104857600,
+        })
 
+        core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
+
+        core.debug(`stdout: ${proc.stdout}`);
         proc.stdout.pipe(process.stdout);
+        core.debug(`on: data`);
         proc.stdout.on('data', (data) => {
-          console.log(data);
-          if (data.match(/remote:/)) {
+          core.info(data.toString());
+          if (data.toString().match(/Building source/)) {
             proc.kill();
           }
         });
+
+        while (!proc.killed) {
+          sleep(100);
+        }
+
 
       } else {
         console.log("followbuild");
