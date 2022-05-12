@@ -72,7 +72,7 @@ const deploy = ({
   dockerHerokuProcessType,
   dockerBuildArgs,
   appdir,
-  followbuild
+  followbuild = false,
 }) => {
   const force = !dontuseforce ? "--force" : "";
   console.log(heroku);
@@ -99,12 +99,12 @@ const deploy = ({
 
     if (appdir === "") {
       if (!followbuild) {
-        console.log("Created and wrote to ~/.netrc");
+        console.log("no followbuild");
         const proc = child.exec(`git push heroku ${branch}:refs/heads/main ${force}`, {
           maxBuffer: 104857600,
         })
 
-        // proc.stdout.pipe(process.stdout);
+        proc.stdout.pipe(process.stdout);
         proc.stdout.on('data', (data) => {
           console.log(data);
           if (data.match(/remote:/)) {
@@ -113,6 +113,7 @@ const deploy = ({
         });
 
       } else {
+        console.log("followbuild");
         execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
           maxBuffer: 104857600,
         });
@@ -120,12 +121,12 @@ const deploy = ({
     } else {
 
       if (!followbuild) {
-        console.log("Created and wrote to ~/.netrc");
+        console.log("no followbuild");
         const proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`, {
           maxBuffer: 104857600,
         });
 
-        // proc.stdout.pipe(process.stdout);
+        proc.stdout.pipe(process.stdout);
         proc.stdout.on('data', (data) => {
           console.log(data);
           if (data.match(/remote:/)) {
@@ -134,6 +135,7 @@ const deploy = ({
         });
 
       } else {
+        console.log("followbuild");
         execSync(
           `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
           { maxBuffer: 104857600 }
