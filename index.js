@@ -101,7 +101,7 @@ const deploy = ({
         maxBuffer: 104857600,
       });
     } else {
-      if (followbuild) {
+      if (!followbuild) {
         const proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`)
 
         proc.stdout.pipe(process.stdout)
