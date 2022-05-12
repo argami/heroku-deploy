@@ -3,6 +3,7 @@ const core = require("@actions/core");
 const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const child = require('child_process');
 
 // Support Functions
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,11 +26,11 @@ const addRemote = ({ app_name, dontautocreate, buildpack, region, team, stack })
 
     execSync(
       "heroku create " +
-        app_name +
-        (buildpack ? " --buildpack " + buildpack : "") +
-        (region ? " --region " + region : "") +
-        (stack ? " --stack " + stack : "") +
-        (team ? " --team " + team : "")
+      app_name +
+      (buildpack ? " --buildpack " + buildpack : "") +
+      (region ? " --region " + region : "") +
+      (stack ? " --stack " + stack : "") +
+      (team ? " --team " + team : "")
     );
   }
 };
@@ -71,6 +72,7 @@ const deploy = ({
   dockerHerokuProcessType,
   dockerBuildArgs,
   appdir,
+  followbuild
 }) => {
   const force = !dontuseforce ? "--force" : "";
   if (usedocker) {
@@ -99,10 +101,22 @@ const deploy = ({
         maxBuffer: 104857600,
       });
     } else {
-      execSync(
-        `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
-        { maxBuffer: 104857600 }
-      );
+      if (followbuild) {
+        const proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`)
+
+        proc.stdout.pipe(process.stdout)
+        proc.stdout.on('data', (data) => {
+          if (data.match(/remote: Building source/)) {
+            proc.kill()
+          }
+        })
+
+      } else {
+        execSync(
+          `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
+          { maxBuffer: 104857600 }
+        );
+      }
     }
   }
 };
@@ -136,6 +150,7 @@ let heroku = {
   branch: core.getInput("branch"),
   dontuseforce: core.getInput("dontuseforce") === "false" ? false : true,
   dontautocreate: core.getInput("dontautocreate") === "false" ? false : true,
+  followbuild: core.getInput("followbuild") === "false" ? false : true,
   usedocker: core.getInput("usedocker") === "false" ? false : true,
   dockerHerokuProcessType: core.getInput("docker_heroku_process_type"),
   dockerBuildArgs: core.getInput("docker_build_args"),
@@ -159,8 +174,8 @@ if (heroku.appdir) {
     heroku.appdir[0] === "." && heroku.appdir[1] === "/"
       ? heroku.appdir.slice(2)
       : heroku.appdir[0] === "/"
-      ? heroku.appdir.slice(1)
-      : heroku.appdir;
+        ? heroku.appdir.slice(1)
+        : heroku.appdir;
 }
 
 // Collate docker build args into arg list
@@ -242,7 +257,7 @@ if (heroku.dockerBuildArgs) {
         if (res.statusCode !== 200) {
           throw new Error(
             "Status code of network request is not 200: Status code - " +
-              res.statusCode
+            res.statusCode
           );
         }
         if (heroku.checkstring && heroku.checkstring !== res.body.toString()) {
