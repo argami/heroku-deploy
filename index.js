@@ -99,29 +99,32 @@ const deploy = ({
     if (appdir === "") {
       if (!followbuild) {
         core.debug("no followbuild 1");
-        const proc = child.exec(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force}`, {
-          shell: '/bin/bash', maxBuffer: 104857600,
-        })
-
-        core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
-
-        core.debug(`stdout: ${proc.stdout}`);
-        proc.stdout.pipe(process.stdout);
-        core.debug(`on: data`);
-        proc.stdout.on('data', (data) => {
-          core.info(data.toString());
-          if (data.toString().match(/Building source/)) {
-            proc.kill();
-          }
+        execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
+          maxBuffer: 104857600, shell: '/bin/bash', timeout: 10000
         });
+        // const proc = child.exec(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force}`, {
+        //   shell: '/bin/bash', maxBuffer: 104857600,
+        // })
 
-        while (!proc.killed) {
-          sleep(100);
-        }
+        // core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
+
+        // core.debug(`stdout: ${proc.stdout.toString()}`);
+        // // proc.stdout.pipe(process.stdout);
+        // core.debug(`on: data`);
+        // proc.stdout.on('data', (data) => {
+        //   core.info(data.toString());
+        //   if (data.toString().match(/Building source/)) {
+        //     proc.kill();
+        //   }
+        // });
+
+        // while (!proc.killed) {
+        //   sleep(100);
+        // }
 
       } else {
         console.log("followbuild");
-        execSync(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force}`, {
+        execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
           maxBuffer: 104857600, shell: '/bin/bash',
         });
       }
@@ -129,25 +132,29 @@ const deploy = ({
 
       if (!followbuild) {
         core.debug("no followbuild 2");
-        const proc = child.exec(`stdbuf -i0 -o0 -e0 git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`, {
-          shell: '/bin/bash', maxBuffer: 104857600,
-        })
+        execSync(
+          `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
+          { maxBuffer: 104857600, shell: '/bin/bash', timeout: 10000 }
+        );
+        // const proc = child.exec(`stdbuf -i0 -o0 -e0 git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`, {
+        //   shell: '/bin/bash', maxBuffer: 104857600,
+        // })
 
-        core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
+        // core.debug(`git push heroku ${branch}:refs/heads/main ${force}`);
 
-        core.debug(`stdout: ${proc.stdout}`);
-        proc.stdout.pipe(process.stdout);
-        core.debug(`on: data`);
-        proc.stdout.on('data', (data) => {
-          core.info(data.toString());
-          if (data.toString().match(/Building source/)) {
-            proc.kill();
-          }
-        });
+        // core.debug(`stdout: ${proc.stdout.toString()}`);
+        // proc.stdout.pipe(process.stdout);
+        // core.debug(`on: data`);
+        // proc.stdout.on('data', (data) => {
+        //   core.info(data.toString());
+        //   if (data.toString().match(/Building source/)) {
+        //     proc.kill();
+        //   }
+        // });
 
-        while (!proc.killed) {
-          sleep(100);
-        }
+        // while (!proc.killed) {
+        //   sleep(100);
+        // }
 
 
       } else {
