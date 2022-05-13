@@ -103,24 +103,24 @@ const deploy = ({
     if (appdir === "") {
       if (!followbuild) {
         core.debug("no followbuild 1");
-        // execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
-        //   maxBuffer: 104857600, shell: '/bin/bash', timeout: 30000
-        // });
-        proc = child.exec(`stdbuf -i0 -o0 -e0 git push heroku ${branch}:refs/heads/main ${force} > gitoutput.log`, {
-          shell: '/bin/bash', maxBuffer: 104857600,
-        })
+        execSync(`git push heroku ${branch}:refs/heads/main ${force} | grep remote -m 2`, {
+          maxBuffer: 104857600
+        });
+        // proc = child.exec(`git push heroku ${branch}:refs/heads/main ${force} | grep remote -m 2`, {
+        //   shell: '/bin/bash', maxBuffer: 104857600,
+        // })
 
-        let data = "";
+        // let data = "";
 
-        while (!data.match(/Building source/)) {
-          try {
-            let data = fs.readFileSync('gitoutput.log', 'utf8');
-            data = data.toString();
-            console.log(data);
-          } catch (err) {
-            console.error(err);
-          }
-        }
+        // while (!data.match(/Building source/)) {
+        //   try {
+        //     let data = fs.readFileSync('gitoutput.log', 'utf8');
+        //     data = data.toString();
+        //     console.log(data);
+        //   } catch (err) {
+        //     console.error(err);
+        //   }
+        // }
 
         // mytail = new Tail("gitoutput.log", line => {
         //   core.info(line);
@@ -169,25 +169,25 @@ const deploy = ({
 
       if (!followbuild) {
         core.debug("no followbuild 2");
-        // execSync(
-        //   `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
-        //   { maxBuffer: 104857600, shell: '/bin/bash', timeout: 30000 }
-        // );
-        proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main > gitoutput.log`, {
-          shell: '/bin/bash', maxBuffer: 104857600,
-        });
+        execSync(
+          `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main | grep remote -m 2`,
+          { maxBuffer: 104857600, shell: '/bin/bash', timeout: 30000 }
+        );
+        // proc = child.exec(`git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main > gitoutput.log`, {
+        //   shell: '/bin/bash', maxBuffer: 104857600,
+        // });
 
-        let data = "";
+        // let data = "";
 
-        while (!data.match(/Building source/)) {
-          try {
-            let data = fs.readFileSync('gitoutput.log', 'utf8');
-            data = data.toString();
-            console.log(data);
-          } catch (err) {
-            console.error(err);
-          }
-        }
+        // while (!data.match(/Building source/)) {
+        //   try {
+        //     let data = fs.readFileSync('gitoutput.log', 'utf8');
+        //     data = data.toString();
+        //     console.log(data);
+        //   } catch (err) {
+        //     console.error(err);
+        //   }
+        // }
 
         // const mytail = new Tail("gitoutput.log", line => {
         //   core.info(line);
@@ -225,7 +225,7 @@ const deploy = ({
       } else {
         console.log("followbuild");
         execSync(
-          `stdbuf -i0 -o0 -e0 git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
+          `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
           { maxBuffer: 104857600 }
         );
       }
